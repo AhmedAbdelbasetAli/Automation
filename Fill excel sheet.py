@@ -1,6 +1,6 @@
 import random
 import openpyxl
-
+from datetime import datetime, timedelta
 # Define the categories for each column
 age_groups = ["25>", "25-35", "36-45", "46-55", "56-65"]
 gender_choices = ["Male", "Female", "Prefer not to say"]
@@ -138,38 +138,47 @@ categories = [
 ]
 
 # Number of rows and columns in the Excel file
-num_rows = 137
-num_columns = 22
+num_rows = 157
+num_columns = 23
+
+# Define the date range for the timestamp
+start_date = datetime(2023, 7, 20, 0, 0)
+end_date = datetime(2023, 7, 28, 23, 59)
 
 # Generate random data for the Excel file
 data = []
+time_interval = (end_date - start_date) / num_rows
+current_time = start_date
+
 for _ in range(num_rows):
     row_data = []
+    # Generate the timestamp in sequential order within the date range
+    timestamp_str = current_time.strftime("%Y/%m/%d %I:%M:%S %p GMT+3")
+    row_data.append(timestamp_str)
+    current_time += time_interval
+    # Rest of the data generation (same as in your original code)
     for category in categories:
         row_data.append(random.choice(category))
-    sports_time_choice = row_data[5]
-    if sports_time_choice in ["4 to 6 hours", "6 to 8 hours", "More than 8 hours"]:
-        row_data[6] = random.choice(["Good", "Very good", "Excellent"])
-    
-    # Add condition for covid_diagnosed_choices and covid_severity_choices
-    if row_data[11] == "No":
-        row_data[12] = "-"
-    
-    # Add condition for covid_vaccinated_choices and covid_vaccine_received_choices
-    if row_data[15] == "No":
-        row_data[16] = "-"
-        row_data[18] = "-"
-    
-    # Add condition for covid_vaccinated_choices and vaccine_choice_choices
-    if row_data[15] == "Yes":
-        row_data[19] = "-"
-    if row_data[15] == "No" and row_data[17] in ["Probably No", "No"]:
-        row_data[20] = "-"
-    
-    # Add condition for covid_vaccinated_choices and willing_to_get_vaccinated_choices
-    if row_data[15] == "Yes" and row_data[17] in ["Probably Yes", "Yes"]:
-        row_data[21] = "-"
     data.append(row_data)
+
+# Apply the conditions for the specific columns
+for row_data in data:
+    sports_time_choice = row_data[6]
+    if sports_time_choice in ["4 to 6 hours", "6 to 8 hours", "More than 8 hours"]:
+        row_data[7] = random.choice(["Good", "Very good", "Excellent"])
+    
+    if row_data[12] == "No":
+        row_data[13] = ""
+    
+    if row_data[16] == "No":
+        row_data[17] = ""
+        row_data[19] = ""
+    
+    if row_data[17] in ["Probably No", "No"]:
+        row_data[20] = ""
+    
+    if row_data[17] in ["Probably Yes", "Yes"]:
+        row_data[21] = ""
 
 # Create the Excel workbook and add data to the worksheet
 workbook = openpyxl.Workbook()
@@ -177,6 +186,7 @@ sheet = workbook.active
 
 # Set the headers for each column
 headers = [
+    "Timestamp",
     "Age",
     "Gender",
     "Marital Status",
@@ -206,8 +216,12 @@ for col_idx in range(num_columns):
 
 # Fill the data into the Excel sheet
 for row_idx, row_data in enumerate(data):
-    for col_idx, cell_value in enumerate(row_data):
-        sheet.cell(row=row_idx + 2, column=col_idx + 1, value=cell_value)
+    # Add the timestamp to the first column
+    sheet.cell(row=row_idx + 2, column=1, value=row_data[0])
+    # Fill the rest of the data for the row (same as in your original code)
+    for col_idx, cell_value in enumerate(row_data[1:]):
+        sheet.cell(row=row_idx + 2, column=col_idx + 2, value=cell_value)
+
 
 # Save the Excel file
 workbook.save("generated_data.xlsx")
